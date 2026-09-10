@@ -88,3 +88,9 @@ To safeguard the production branch, prevent accidental direct commits, and manda
 - **Direct Push Attempt:** Following the setup of Part 7 branch protections, a direct commit push to `main` from terminal failed with `remote: error: GH006: Protected branch update failed for refs/heads/main`.
 - **Enforcement Validation:** This error confirmed that the branch protection policies effectively prevent unreviewed or unvalidated local commits from landing directly on production.
 - **Resolution via PR Workflow:** To maintain complete compliance without disabling protection, I created a feature branch `docs/part-9-docker-readme`, pushed the changes, submitted Pull Request #2, passed automated `ci-checks`, and squashed and merged into `main`.
+
+### Part 10 - Build and Verify Docker Image Locally
+- Configured `VERSION` file with application release `1.0.0`.
+- Built local Docker container image using `docker build -t student-ml-api:1.0.0 .`.
+- Executed container in background via `docker run -d --name student-ml-api -p 5000:5000 student-ml-api:1.0.0`.
+- Verified container endpoint via `curl http://localhost:5000/health`, confirming expected JSON status and version output `1.0.0`.
