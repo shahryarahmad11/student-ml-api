@@ -145,3 +145,24 @@ To safeguard the production branch, prevent accidental direct commits, and manda
 - Updated `VERSION` file to `1.1.0`.
 - Expanded `/health` endpoint in `app.py` to return `application_version: 1.1.0` and `model_version: model-1`.
 - Updated pytest suite in `tests/test_app.py` to assert against the version 1.1.0 schema response.
+
+### Part 19 — Release Version 1.1.0
+- Created Git release tag `v1.1.0` pointing to updated model-metadata commit on `main`.
+- Published tag to remote repository via `git push origin v1.1.0`.
+- Verified GitHub Actions release workflow automatically published `student-ml-api:1.1.0` and updated `student-ml-api:latest`.
+- Confirmed GHCR registry state:
+  - `ghcr.io/shahryarahmad11/student-ml-api:1.0.0` (Immutable previous release)
+  - `ghcr.io/shahryarahmad11/student-ml-api:1.1.0` (Current semantic release)
+  - `ghcr.io/shahryarahmad11/student-ml-api:latest` (Pointer to 1.1.0 digest)
+
+### Part 20 — Rollback Exercise & Advantage Explanation
+- Simulated production rollback following a hypothetical issue in version `1.1.0`.
+- Executed immediate recovery without modifying application source code or rebuilding image artifacts:
+  - Stopped running container: `docker rm -f student-ml-api`
+  - Instantly redeployed proven stable image: `docker run -d --name student-ml-api -p 5000:5000 ghcr.io/shahryarahmad11/student-ml-api:1.0.0`
+  - Verified endpoint output via `curl http://localhost:5000/health`, confirming active operational status on version `1.0.0`.
+
+**Why Container Registry Rollback Superiority Over Traditional Deployment (`git clone` $\rightarrow$ `pip install` $\rightarrow$ `python app.py`):**
+1. **Zero Build/Compile Overhead:** Fetching pre-built container images bypasses dependency resolution, compilation steps, and remote package downloads (PyPI), cutting recovery time from minutes to seconds.
+2. **Deterministic Immutability:** Pre-tested Docker images guarantee identical execution environments across development and production, eliminating unexpected runtime failures caused by transitive dependency updates or missing system libraries.
+3. **No Local Runtime Toolchain Dependency:** Host nodes do not require Python interpreters, virtual environment configurations, or build tools—only a lightweight container runtime (`docker`/`containerd`).
