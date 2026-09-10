@@ -227,3 +227,41 @@ REPOSITORY                                 TAG        IMAGE ID       CREATED    
 ghcr.io/shahryarahmad11/student-ml-api    1.1.0      554b0efe7fb5   10 minutes ago   168MB
 ghcr.io/shahryarahmad11/student-ml-api    c5e1865    554b0efe7fb5   10 minutes ago   168MB
 ghcr.io/shahryarahmad11/student-ml-api    latest     554b0efe7fb5   10 minutes ago   168MB
+### Part 25 — Advanced Challenge: Docker Build Cache Analysis
+
+#### Build Output Comparison & Layer Reuse Observation:
+1. **Modifying `app.py` only:**
+   - **Reused Layers:** `WORKDIR /app`, `COPY requirements.txt .`, and `RUN pip install --no-cache-dir --default-timeout=100 -r requirements.txt` returned `CACHED`.
+   - **Re-executed Layers:** Only `COPY . .` and final image export executed.
+2. **Modifying `requirements.txt` only:**
+   - **Invalidated Layers:** Modifying `requirements.txt` invalidated the cache at `COPY requirements.txt .`.
+   - **Re-executed Layers:** Docker was forced to re-run the expensive `RUN pip install` step and every subsequent layer from scratch.
+
+#### Architectural Rationale: Layer Ordering Best Practices
+Ordering Docker instructions as:
+```dockerfile
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY app.py .
+
+---
+
+### Part 26 — MLOps Failure Analysis & Diagnostic Log
+
+#### Failure Case 1: Dependency Installation Read Timeout (`pip install`)
+- **Symptom:** Docker build failed during package installation (`RUN pip install --no-cache-dir -r requirements.txt`) with `pip._vendor.urllib3.exceptions.ReadTimeoutError: HTTPSConnectionPool(host='files.pythonhosted.org', port=443): Read timed out.` and `exit code: 2`.
+- **Root Cause:** Transient network latency and socket timeouts while downloading large wheels (`pydantic-core`, `pytest`) from PyPI inside the ephemeral container build context.
+- **Evidence:** Terminal output log showing `TimeoutError: The read operation timed out` during package download at `41.0/337.4 kB`.
+- **Correction:** Updated `Dockerfile` to configure an explicit extended socket timeout flag: `RUN pip install --no-cache-dir --default-timeout=100 -r requirements.txt`.
+
+#### Failure Case 2: Protected Branch Direct Push Rejection (`main`)
+- **Symptom:** Terminal command `git push origin main` was rejected with `remote: error: GH006: Protected branch update failed for refs/heads/main.`
+- **Root Cause:** GitHub Repository Branch Protection rules enforced on `main` blocked direct commit pushes to mandate that all code modifications arrive via approved Pull Requests with passing `ci-checks`.
+- **Evidence:** Git error output stating `! [remote rejected] main -> main (protected branch hook declined) error: failed to push some refs`.
+- **Correction:** Created a dedicated feature branch (`git checkout -b <branch-name>`), pushed changes, opened a Pull Request targeting `main`, verified automated status checks passed, and completed the merge via **Squash and merge**.
+
+#### Failure Case 3: Missing Remote Release Image Tag (`404 Not Found`)
+- **Symptom:** Running `docker pull ghcr.io/shahryarahmad11/student-ml-api:1.1.0` failed with `Error response from daemon: failed to resolve reference "ghcr.io/shahryarahmad11/student-ml-api:1.1.0": ghcr.io/shahryarahmad11/student-ml-api:1.1.0: not found`.
+- **Root Cause:** The Git tag `v1.1.0` was attached locally to an older commit that was already pushed, causing subsequent `git push origin v1.1.0` commands to report `Everything up-to-date` without triggering the tag-based release workflow (`release.yml`).
+- **Evidence:** Terminal output showing `Everything up-to-date` on tag push while GHCR contained no published `1.1.0` artifact.
+- **Correction:** Force-deleted the stagnant local and remote tags (`git tag -d v1.1.0 && git push origin :refs/tags/v1.1.0`), re-tagged the latest commit on `main`, and pushed to trigger the automated release pipeline.
