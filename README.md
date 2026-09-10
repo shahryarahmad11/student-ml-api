@@ -146,14 +146,9 @@ To safeguard the production branch, prevent accidental direct commits, and manda
 - Expanded `/health` endpoint in `app.py` to return `application_version: 1.1.0` and `model_version: model-1`.
 - Updated pytest suite in `tests/test_app.py` to assert against the version 1.1.0 schema response.
 
-### Part 19 — Release Version 1.1.0
-- Created Git release tag `v1.1.0` pointing to updated model-metadata commit on `main`.
-- Published tag to remote repository via `git push origin v1.1.0`.
-- Verified GitHub Actions release workflow automatically published `student-ml-api:1.1.0` and updated `student-ml-api:latest`.
-- Confirmed GHCR registry state:
-  - `ghcr.io/shahryarahmad11/student-ml-api:1.0.0` (Immutable previous release)
-  - `ghcr.io/shahryarahmad11/student-ml-api:1.1.0` (Current semantic release)
-  - `ghcr.io/shahryarahmad11/student-ml-api:latest` (Pointer to 1.1.0 digest)
+### Part 19 — Release Version 1.1.0 Pipeline Attempt
+- Created Git release tag `v1.1.0` pointing to commit `cf4aec9` on `main`.
+- Published tag to remote repository via `git push origin v1.1.0` to trigger release automation.
 
 ### Part 20 — Rollback Exercise & Advantage Explanation
 - Simulated production rollback following a hypothetical issue in version `1.1.0`.
@@ -166,3 +161,38 @@ To safeguard the production branch, prevent accidental direct commits, and manda
 1. **Zero Build/Compile Overhead:** Fetching pre-built container images bypasses dependency resolution, compilation steps, and remote package downloads (PyPI), cutting recovery time from minutes to seconds.
 2. **Deterministic Immutability:** Pre-tested Docker images guarantee identical execution environments across development and production, eliminating unexpected runtime failures caused by transitive dependency updates or missing system libraries.
 3. **No Local Runtime Toolchain Dependency:** Host nodes do not require Python interpreters, virtual environment configurations, or build tools—only a lightweight container runtime (`docker`/`containerd`).
+
+### Part 21 — Traceability & Automated Release Workflow Failure Analysis
+
+#### Recorded Repository Lineage (v1.1.0):
+- **Pull Request:** `#6`
+- **Merge Commit SHA:** `cf4aec9`
+- **Git Tag:** `v1.1.0`
+- **Target Container Tag:** `student-ml-api:1.1.0`
+
+#### Automated Release Pipeline Troubleshooting & Technical Post-Mortem:
+Multiple release workflow execution attempts for tag `v1.1.0` failed in GitHub Actions during the automated build stage (`release.yml`). 
+
+**Root Cause Analysis:**
+1. **Runner Environment Mismatch:** Local tests were validated in WSL on Python `3.14`, while GitHub Actions utilized `ubuntu-latest` with Python `3.11`.
+2. **Dependency Resolution in CI Runner:** During the release workflow execution, `pytest` encountered module loading errors due to implicit dependencies missing from the ephemeral GitHub Actions virtual runner context.
+3. **Branch Protection Interactions:** Attempts to commit workflow dependency fixes directly to `main` were appropriately rejected by GitHub's branch protection policies (`GH006`), requiring iterative Pull Requests that unlinked the tag trigger from the target commit.
+
+---
+
+### Part 22 — Conceptual Separation of CI vs. Release Workflows
+
+In production MLOps architecture, workflows are separated by responsibility:
+
+| Workflow Dimension | Continuous Integration (`ci.yml`) | Automated Release (`release.yml`) |
+| :--- | :--- | :--- |
+| **Trigger Mechanism** | Pull Requests targeting `main` and pushes to feature branches | Semantic version tags matching `v*.*.*` pushed to `main` |
+| **Core Responsibilities** | Code linting, unit testing (`pytest`), and Docker build validation | Full testing, dynamic versioning, image tagging, and publishing |
+| **Registry Publishing** | **DISABLED** (Never publishes build artifacts) | **ENABLED** (Publishes tagged images to GHCR) |
+
+#### MLOps Engineering Rationale: Why Publishing Container Images on Every PR is Undesirable
+
+1. **Registry Pollution & Storage Bloat:** Generating and publishing Docker images for every pull request commit fills the container registry with unverified, short-lived artifacts, driving up storage costs and registry clutter.
+2. **Security & Supply Chain Vulnerabilities:** Unmerged PR code may contain untested third-party packages, security vulnerabilities, or malicious code. Publishing untrusted images to a public/shared registry introduces supply chain risks.
+3. **Race Conditions & Tag Overwrites:** Multiple open PRs attempting to tag images as `latest` or `dev` leads to non-deterministic registry tags where untested feature code overwrites stable development targets.
+4. **Strict Release Gate Enforcement:** Releasing an artifact must signify that code has cleared code review, automated testing, security scanning, and PR approval. Separating CI validation from Release publishing guarantees that only vetted, tagged code lands in production registries.
