@@ -1,3 +1,4 @@
+cat << 'EOF' > README.md
 # student-ml-api
 
 This repository contains an ML inference API service built with FastAPI as part of an MLOps assignment.
@@ -178,8 +179,6 @@ Multiple release workflow execution attempts for tag `v1.1.0` failed in GitHub A
 2. **Dependency Resolution in CI Runner:** During the release workflow execution, `pytest` encountered module loading errors due to implicit dependencies missing from the ephemeral GitHub Actions virtual runner context.
 3. **Branch Protection Interactions:** Attempts to commit workflow dependency fixes directly to `main` were appropriately rejected by GitHub's branch protection policies (`GH006`), requiring iterative Pull Requests that unlinked the tag trigger from the target commit.
 
----
-
 ### Part 22 — Conceptual Separation of CI vs. Release Workflows
 
 In production MLOps architecture, workflows are separated by responsibility:
@@ -196,3 +195,35 @@ In production MLOps architecture, workflows are separated by responsibility:
 2. **Security & Supply Chain Vulnerabilities:** Unmerged PR code may contain untested third-party packages, security vulnerabilities, or malicious code. Publishing untrusted images to a public/shared registry introduces supply chain risks.
 3. **Race Conditions & Tag Overwrites:** Multiple open PRs attempting to tag images as `latest` or `dev` leads to non-deterministic registry tags where untested feature code overwrites stable development targets.
 4. **Strict Release Gate Enforcement:** Releasing an artifact must signify that code has cleared code review, automated testing, security scanning, and PR approval. Separating CI validation from Release publishing guarantees that only vetted, tagged code lands in production registries.
+
+### Part 23 — Advanced Challenge: OCI Image Metadata
+- Configured OCI (Open Container Initiative) standard labels during Docker builds in `.github/workflows/release.yml` and `Dockerfile`.
+- Injected build parameters to establish full artifact traceability:
+  - **Application Version:** `1.1.0` (`org.opencontainers.image.version`)
+  - **Git Commit Revision:** `0fd894e` (`org.opencontainers.image.revision`)
+  - **Repository Source:** `https://github.com/shahryarahmad11/student-ml-api` (`org.opencontainers.image.source`)
+  - **Build Timestamp:** `2026-09-10T18:15:23Z` (`org.opencontainers.image.created`)
+- Built local image with build arguments:
+  ```bash
+  docker build \
+    --build-arg VERSION=1.1.0 \
+    --build-arg COMMIT_SHA=$(git rev-parse --short HEAD) \
+    --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
+    -t student-ml-api:1.1.0-metadata .
+### Part 24 — Advanced Challenge: Commit SHA Tagging Execution & Rationale
+- Configured and executed multi-tag build mapping the short Git commit SHA (`c5e1865`) directly to the container registry image.
+- Added `--default-timeout=100` to `pip install` inside `Dockerfile` to handle transient PyPI network delays.
+- Executed local multi-tag commands:
+  ```bash
+  docker build \
+    --build-arg VERSION=1.1.0 \
+    --build-arg COMMIT_SHA=$(git rev-parse --short HEAD) \
+    --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
+    -t ghcr.io/shahryarahmad11/student-ml-api:$(git rev-parse --short HEAD) .
+    
+  docker tag ghcr.io/shahryarahmad11/student-ml-api:c5e1865 ghcr.io/shahryarahmad11/student-ml-api:1.1.0
+  docker tag ghcr.io/shahryarahmad11/student-ml-api:c5e1865 ghcr.io/shahryarahmad11/student-ml-api:latest
+REPOSITORY                                 TAG        IMAGE ID       CREATED          SIZE
+ghcr.io/shahryarahmad11/student-ml-api    1.1.0      554b0efe7fb5   10 minutes ago   168MB
+ghcr.io/shahryarahmad11/student-ml-api    c5e1865    554b0efe7fb5   10 minutes ago   168MB
+ghcr.io/shahryarahmad11/student-ml-api    latest     554b0efe7fb5   10 minutes ago   168MB
