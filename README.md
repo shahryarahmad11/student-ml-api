@@ -94,3 +94,24 @@ To safeguard the production branch, prevent accidental direct commits, and manda
 - Built local Docker container image using `docker build -t student-ml-api:1.0.0 .`.
 - Executed container in background via `docker run -d --name student-ml-api -p 5000:5000 student-ml-api:1.0.0`.
 - Verified container endpoint via `curl http://localhost:5000/health`, confirming expected JSON status and version output `1.0.0`.
+
+### Part 11 - Docker Image Inspection
+
+**Extracted Container Details:**
+- **Container ID:** `e2b00d4b61dc` (Full: `e2b00d4b61dc55d5920a530f710d9042be98d54ae83fb39ed4c78ca6a5739b78`)
+- **Image ID:** `d51bdd440a96` (Full: `sha256:d51bdd440a96334e1d6fb6da5deb209b11f861c74dd9fe250c423bfe15dbbc70`)
+- **Exposed Port:** `5000/tcp` (Mapped to host `0.0.0.0:5000`)
+- **Running Command:** `uvicorn app:app --host 0.0.0.0 --port 5000`
+- **Application Working Directory:** `/app`
+
+**Executed Inspection Commands:**
+- `docker images` — Listed all locally cached container images and verified `student-ml-api:1.0.0`.
+- `docker ps` — Verified active running state, container name, and host port mapping (`0.0.0.0:5000->5000/tcp`).
+- `docker logs student-ml-api` — Inspected live application stdout logs confirming Uvicorn process initialization.
+- `docker inspect student-ml-api` — Extracted full JSON metadata for state, network ports, volume mounts, and execution path.
+- `docker exec -it student-ml-api sh -c "pwd && exit"` — Verified shell execution and confirmed working directory `/app`.
+
+### Part 12 - Container Registry
+- Authenticated with GitHub Container Registry (`ghcr.io`) using a Personal Access Token with `write:packages` scope.
+- Tagged local image: `ghcr.io/shahryarahmad11/student-ml-api:1.0.0`.
+- Published image to remote registry via `docker push ghcr.io/shahryarahmad11/student-ml-api:1.0.0`.
