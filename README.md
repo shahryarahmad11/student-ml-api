@@ -75,3 +75,16 @@ To safeguard the production branch, prevent accidental direct commits, and manda
 - **Issue Encountered:** Upon attempting to execute the merge, GitHub blocked the action with the error: `Merging is blocked: At least 1 approving review is required by reviewers with write access`. Because GitHub restricts repository owners from approving their own Pull Requests, the rule enabled in Part 7 prevented completion.
 - **Resolution Step:** I navigated back to Repository `Settings` -> `Branches` -> `main` Protection Rules and unchecked **Require approvals** while maintaining **Require status checks to pass before merging** (`ci-checks`).
 - **Final Merge Execution:** Once the review restriction was updated, the merge gate cleared. I selected **Squash and Merge**, confirmed the pull request merge into `main`, and deleted the feature branch.
+
+### Part 9 - Dockerization & Branch Protection Enforcement Verification
+
+#### Production-Oriented Docker Configuration:
+- Implemented a production `Dockerfile` using `python:3.11-slim` (avoiding unpinned `latest` tags).
+- Configured efficient image layer caching by placing `requirements.txt` and `pip install --no-cache-dir` prior to copying application source files.
+- Defined `WORKDIR /app`, exposed port `5000`, and set `CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "5000"]`.
+- Configured `.dockerignore` to exclude `.git`, `.github`, `__pycache__`, `*.pyc`, `.venv`, `.env`, and `tests/` directories.
+
+#### Real-World Branch Protection Enforcement Event:
+- **Direct Push Attempt:** Following the setup of Part 7 branch protections, a direct commit push to `main` from terminal failed with `remote: error: GH006: Protected branch update failed for refs/heads/main`.
+- **Enforcement Validation:** This error confirmed that the branch protection policies effectively prevent unreviewed or unvalidated local commits from landing directly on production.
+- **Resolution via PR Workflow:** To maintain complete compliance without disabling protection, I created a feature branch `docs/part-9-docker-readme`, pushed the changes, submitted Pull Request #2, passed automated `ci-checks`, and squashed and merged into `main`.
