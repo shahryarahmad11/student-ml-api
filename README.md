@@ -239,7 +239,7 @@ ghcr.io/shahryarahmad11/student-ml-api    latest     554b0efe7fb5   10 minutes a
 
 #### Architectural Rationale: Layer Ordering Best Practices
 Ordering Docker instructions as:
-```dockerfile
+dockerfile
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 COPY app.py .
@@ -265,3 +265,4 @@ COPY app.py .
 - **Root Cause:** The Git tag `v1.1.0` was attached locally to an older commit that was already pushed, causing subsequent `git push origin v1.1.0` commands to report `Everything up-to-date` without triggering the tag-based release workflow (`release.yml`).
 - **Evidence:** Terminal output showing `Everything up-to-date` on tag push while GHCR contained no published `1.1.0` artifact.
 - **Correction:** Force-deleted the stagnant local and remote tags (`git tag -d v1.1.0 && git push origin :refs/tags/v1.1.0`), re-tagged the latest commit on `main`, and pushed to trigger the automated release pipeline.
+```
