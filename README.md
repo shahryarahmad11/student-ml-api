@@ -120,3 +120,11 @@ To safeguard the production branch, prevent accidental direct commits, and manda
 - Created Git tag `v1.0.0` pointing to commit `5b87aeb` on `main`.
 - Published tag to GitHub via `git push origin v1.0.0`.
 - Established 1:1 mapping between Git release tag `v1.0.0` and GHCR image tag `1.0.0`.
+
+### Part 14 — Automated Release Workflow
+- Configured `.github/workflows/release.yml` triggered exclusively on semantic version tags matching `v*.*.*`.
+
+### Part 15 — Release Pipeline Requirements
+- Implemented step-by-step pipeline execution: Checkout $\rightarrow$ Test execution (`pytest`) $\rightarrow$ Registry authentication (`ghcr.io`) $\rightarrow$ Build and tag $\rightarrow$ Registry push.
+- Applied dynamic version extraction (`${GITHUB_REF_NAME#v}`) to map Git tag `v1.0.0` to Docker tag `1.0.0` without hard-coding values.
+- Configured multi-tag publishing targeting both `student-ml-api:1.0.0` and `student-ml-api:latest`.
