@@ -45,3 +45,19 @@ Before running or developing this application, ensure the following environment 
 - I introduced an intentional test failure in `tests/test_app.py` by changing the health endpoint assertion to an invalid status.
 - I verified that GitHub Actions automatically flagged the job as **FAILED**, successfully blocking the PR merge gate.
 - I resolved the intentional failure by committing `fix: correct health endpoint test`, pushed to GitHub, and verified the workflow run returned to a **PASSED** (green) status.
+
+### Part 7 - Protect the Main Branch Configuration Log
+To safeguard the production branch, prevent accidental direct commits, and mandate continuous integration verification, I enabled **Branch Protection Rules** on the `main` branch via GitHub Repository Settings (`Settings` -> `Branches` -> `Add branch protection rule`).
+
+#### Selected Protection Settings & Rationale:
+1. **Branch Pattern:** `main`
+2. **Require a pull request before merging:**
+   - **Enforced Option:** `Require approvals` (Set to minimum 1 reviewer before merging).
+   - **Rationale:** Ensures no direct development or force pushes occur on `main`. All modifications must be submitted via a Pull Request from a feature branch.
+3. **Require status checks to pass before merging:**
+   - **Enforced Option:** `Require branches to be up to date before merging`.
+   - **Target Status Check:** `ci-checks` (GitHub Actions CI Workflow).
+   - **Rationale:** Blocks code merging until all unit tests (`pytest`) and image build validations (`docker build`) succeed in GitHub Actions.
+4. **Do not allow bypassing the above settings:**
+   - **Enforced Option:** Enabled for all users including administrators.
+   - **Rationale:** Mandates that strict quality gates apply universally to guarantee total MLOps compliance.
