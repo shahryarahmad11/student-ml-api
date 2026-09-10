@@ -40,3 +40,8 @@ Before running or developing this application, ensure the following environment 
 ### Part 5 - GitHub Actions CI
 - I created `.github/workflows/ci.yml` configured to trigger on pull requests targeting `main` and pushes to feature branches.
 - I defined a continuous integration job covering code checkout, Python setup, dependency installation, `pytest` unit testing, and Docker build validation.
+
+### Part 6 - Demonstrate Pipeline Failure Gate
+- I introduced an intentional test failure in `tests/test_app.py` by changing the health endpoint assertion to an invalid status.
+- I verified that GitHub Actions automatically flagged the job as **FAILED**, successfully blocking the PR merge gate.
+- I resolved the intentional failure by committing `fix: correct health endpoint test`, pushed to GitHub, and verified the workflow run returned to a **PASSED** (green) status.
