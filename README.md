@@ -115,3 +115,8 @@ To safeguard the production branch, prevent accidental direct commits, and manda
 - Authenticated with GitHub Container Registry (`ghcr.io`) using a Personal Access Token with `write:packages` scope.
 - Tagged local image: `ghcr.io/shahryarahmad11/student-ml-api:1.0.0`.
 - Published image to remote registry via `docker push ghcr.io/shahryarahmad11/student-ml-api:1.0.0`.
+
+### Part 13 - Git Tag and Release Version
+- Created Git tag `v1.0.0` pointing to commit `5b87aeb` on `main`.
+- Published tag to GitHub via `git push origin v1.0.0`.
+- Established 1:1 mapping between Git release tag `v1.0.0` and GHCR image tag `1.0.0`.
