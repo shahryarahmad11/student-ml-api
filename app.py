@@ -1,25 +1,25 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from pydantic import BaseModel
 
-app = FastAPI(title="student-ml-api", version="1.0.0")
+app = FastAPI(title="Student ML API")
 
 class PredictRequest(BaseModel):
-    value: float | int
+    feature_1: float
+    feature_2: float
 
 @app.get("/health")
-def health_check():
+def health():
     return {
         "status": "healthy",
         "application": "student-ml-api",
-        "version": "1.0.0"
+        "application_version": "1.1.0",
+        "model_version": "model-1"
     }
 
 @app.post("/predict")
-def predict(payload: PredictRequest):
-    if payload.value is None:
-        raise HTTPException(status_code=400, detail="Missing input")
-    
+def predict(data: PredictRequest):
+    prediction = (data.feature_1 * 0.5) + (data.feature_2 * 0.5)
     return {
-        "input": payload.value,
-        "prediction": payload.value * 2
+        "prediction": prediction,
+        "status": "success"
     }

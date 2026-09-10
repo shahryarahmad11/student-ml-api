@@ -132,3 +132,16 @@ To safeguard the production branch, prevent accidental direct commits, and manda
 ### Part 16 — Registry Verification
 - Verified GitHub Container Registry contains container image `student-ml-api` with dual tags: `1.0.0` and `latest`.
 - Recorded published image digest: `sha256:d51bdd440a96334e1d6fb6da5deb209b11f861c74dd9fe250c423bfe15dbbc70`.
+
+### Part 17 — Artifact Reproducibility
+- Removed local Docker image `student-ml-api:1.0.0` to verify clean execution state.
+- Pulled image directly from registry: `docker pull ghcr.io/shahryarahmad11/student-ml-api:1.0.0`.
+- Executed downloaded image: `docker run -d --name student-ml-api -p 5000:5000 ghcr.io/shahryarahmad11/student-ml-api:1.0.0`.
+- Verified health endpoint via `curl http://localhost:5000/health`, returning: `{"status":"healthy","application":"student-ml-api","version":"1.0.0"}`.
+- Confirmed runtime reproducibility from remote container registry without local build dependencies.
+
+### Part 18 — Develop Version 1.1.0
+- Created feature branch `feature/model-metadata`.
+- Updated `VERSION` file to `1.1.0`.
+- Expanded `/health` endpoint in `app.py` to return `application_version: 1.1.0` and `model_version: model-1`.
+- Updated pytest suite in `tests/test_app.py` to assert against the version 1.1.0 schema response.
