@@ -61,3 +61,12 @@ To safeguard the production branch, prevent accidental direct commits, and manda
 4. **Do not allow bypassing the above settings:**
    - **Enforced Option:** Enabled for all users including administrators.
    - **Rationale:** Mandates that strict quality gates apply universally to guarantee total MLOps compliance.
+
+### Part 8 - Merge Strategy Selection & Justification
+
+#### Selected Strategy: **Squash and Merge**
+
+#### Justification for MLOps & Production Workflows:
+1. **Clean & Linear History on `main`:** During feature development on `feature/prediction-api`, several intermediate commits were made (such as minor fixups, documentation adjustments, and intentional pipeline failure tests). Utilizing **Squash and Merge** combines all work from PR #1 into a single, cohesive commit on `main`.
+2. **Simplified Rollbacks:** If a bug or regression is discovered in production, having one clean commit representing the complete feature (`feat: add prediction endpoint, unit tests, docker, and CI pipeline`) makes reverting changes straightforward (`git revert <commit-hash>`) without untangling micro-commits.
+3. **Traceability:** The single squashed commit automatically links directly back to Pull Request #1 on GitHub, providing full context, code review history, and automated check outputs while keeping the `main` branch commit log clean and readable.
